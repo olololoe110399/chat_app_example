@@ -2,7 +2,7 @@ import 'package:chat_app/constants/all_constants.dart';
 import 'package:chat_app/models/chat_user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -22,12 +22,17 @@ class AuthProvider extends ChangeNotifier {
 
   Status _status = Status.uninitialized;
 
+  Status get status => _status;
+
   AuthProvider({
     required this.googleSignIn,
     required this.firebaseAuth,
     required this.firebaseStorage,
     required this.sharedPreferences,
   });
+
+  String? get getFirebaseUserId =>
+      sharedPreferences.getString(FirestoreConstants.id);
 
   Future<bool> isLogin() => googleSignIn.isSignedIn();
 
