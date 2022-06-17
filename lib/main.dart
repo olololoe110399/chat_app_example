@@ -1,5 +1,6 @@
 import 'package:chat_app/firebase_options.dart';
 import 'package:chat_app/providers/auth_provider.dart';
+import 'package:chat_app/providers/chat_provider.dart';
 import 'package:chat_app/providers/home_provider.dart';
 import 'package:chat_app/screens/splash_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -39,6 +40,12 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (_) => HomeProvider(
+            firebaseFirestore: firebaseFirestore,
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ChatProvider(
+            firebaseStorage: firebaseStorage,
             firebaseFirestore: firebaseFirestore,
           ),
         ),
