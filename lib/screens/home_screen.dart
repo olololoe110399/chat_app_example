@@ -140,7 +140,9 @@ class _HomeScreenState extends State<HomeScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => const ChatScreen(),
+                builder: (_) => ChatScreen(
+                  peerId: userChat.id,
+                ),
               ),
             );
           },

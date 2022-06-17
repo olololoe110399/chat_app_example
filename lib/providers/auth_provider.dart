@@ -40,7 +40,6 @@ class AuthProvider extends ChangeNotifier {
     _status = Status.authenticating;
     notifyListeners();
     GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-
     if (googleUser != null) {
       GoogleSignInAuthentication? googleAuth = await googleUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
