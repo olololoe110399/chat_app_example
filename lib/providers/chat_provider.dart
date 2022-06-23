@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:chat_app/constants/firestore_constants.dart';
 import 'package:chat_app/models/chat_message.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -50,6 +52,12 @@ class ChatProvider extends ChangeNotifier {
         chatMessages.toJson(),
       ),
     );
+  }
+
+  UploadTask uploadImageFile(File file, String fileName) {
+    Reference reference = firebaseStorage.ref().child(fileName);
+    UploadTask uploadTask = reference.putFile(file);
+    return uploadTask;
   }
 }
 
