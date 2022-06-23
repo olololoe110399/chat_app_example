@@ -1,4 +1,5 @@
 import 'package:chat_app/firebase_options.dart';
+import 'package:chat_app/hepler/firebase_messaging_helper.dart';
 import 'package:chat_app/providers/auth_provider.dart';
 import 'package:chat_app/providers/chat_provider.dart';
 import 'package:chat_app/providers/home_provider.dart';
@@ -15,16 +16,33 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await FirebaseMessagingHelper.instance.init();
   SharedPreferences prefs = await SharedPreferences.getInstance();
   runApp(MyApp(sharedPreferences: prefs));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   final SharedPreferences sharedPreferences;
+
+  const MyApp({Key? key, required this.sharedPreferences}) : super(key: key);
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
   final FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
+
   final FirebaseStorage firebaseStorage = FirebaseStorage.instance;
 
-  MyApp({Key? key, required this.sharedPreferences}) : super(key: key);
+  @override
+  void initState() {
+    FirebaseMessagingHelper.instance.onMessage.listen((event) {
+      print("[FirebaseMessagingHelper] :title ${event.notification?.title} ");
+      print("[FirebaseMessagingHelper] :title ${event.notification?.body} ");
+    });
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +53,7 @@ class MyApp extends StatelessWidget {
             googleSignIn: GoogleSignIn(),
             firebaseAuth: FirebaseAuth.instance,
             firebaseStorage: firebaseFirestore,
-            sharedPreferences: sharedPreferences,
+            sharedPreferences: widget.sharedPreferences,
           ),
         ),
         ChangeNotifierProvider(

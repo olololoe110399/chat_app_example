@@ -1,12 +1,16 @@
+import 'dart:io';
+
 import 'package:chat_app/constants/text_field_constants.dart';
 import 'package:chat_app/models/chat_message.dart';
 import 'package:chat_app/providers/auth_provider.dart';
 import 'package:chat_app/providers/chat_provider.dart';
 import 'package:chat_app/utillities/keyboard_utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -26,6 +30,7 @@ class _ChatScreenState extends State<ChatScreen> {
   late String currentUserId;
   late TextEditingController textEditingController;
   String groupChatId = "";
+  bool loading = false;
 
   @override
   void initState() {
@@ -66,32 +71,53 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
+  void _openLoadingDialog(BuildContext context) {
+    showDialog(
+      barrierDismissible: false,
+      barrierColor: Colors.black.withOpacity(0.5),
+      context: context,
+      builder: (BuildContext context) {
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Chat Page"),
-        actions: [
-          IconButton(
-            onPressed: () {
-              // call phone
-            },
-            icon: const Icon(Icons.phone),
-          )
-        ],
-      ),
-      body: SafeArea(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Column(
-            children: [
-              _buildListMessage(),
-              _buildMessageInput(),
-            ],
+    return WillPopScope(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("Chat Page"),
+          actions: [
+            IconButton(
+              onPressed: () {
+                // call phone
+              },
+              icon: const Icon(Icons.phone),
+            )
+          ],
+        ),
+        body: SafeArea(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Column(
+              children: [
+                _buildListMessage(),
+                _buildMessageInput(),
+              ],
+            ),
           ),
         ),
       ),
+      onWillPop: () => _onBackButton(context),
     );
+  }
+
+  Future<bool> _onBackButton(context) async {
+    Navigator.pop(context);
+    return true;
   }
 
   Widget _buildListMessage() {
@@ -152,7 +178,7 @@ class _ChatScreenState extends State<ChatScreen> {
               borderRadius: BorderRadius.circular(30),
             ),
             child: IconButton(
-              onPressed: () {},
+              onPressed: () => getImage(context),
               icon: const Icon(
                 Icons.camera_alt,
                 color: Colors.blue,
@@ -210,7 +236,7 @@ class _ChatScreenState extends State<ChatScreen> {
             children: [
               _buildMessage(chatMessages, isUserMe),
             ],
-          )
+          ),
         ],
       );
     } else {
@@ -263,5 +289,32 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       ),
     );
+  }
+
+  void getImage(context) async {
+    final imagePicker = ImagePicker();
+    XFile? pickerFile;
+    pickerFile = await imagePicker.pickImage(source: ImageSource.camera);
+
+    if (pickerFile != null) {
+      final imageFile = File(pickerFile.path);
+      _openLoadingDialog(context);
+      uploadImageFile(imageFile, context);
+    }
+  }
+
+  void uploadImageFile(File imageFile, context) {
+    String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+    chatProvider
+        .uploadImageFile(imageFile, fileName)
+        .then((snapshot) => snapshot.ref.getDownloadURL())
+        .then((imageUrl) {
+      _onBackButton(context);
+      onSendMessage(imageUrl, MessageType.image.index);
+    }).catchError((error) {
+      print(error);
+      _onBackButton(context);
+      Fluttertoast.showToast(msg: error.message ?? error.toString());
+    });
   }
 }
