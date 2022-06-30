@@ -1,5 +1,6 @@
 import 'package:chat_app/firebase_options.dart';
 import 'package:chat_app/hepler/firebase_messaging_helper.dart';
+import 'package:chat_app/hepler/local_push_notification_help.dart';
 import 'package:chat_app/providers/auth_provider.dart';
 import 'package:chat_app/providers/chat_provider.dart';
 import 'package:chat_app/providers/home_provider.dart';
@@ -17,6 +18,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await FirebaseMessagingHelper.instance.init();
+  await LocalPushNotificationHelper.instance.init();
   SharedPreferences prefs = await SharedPreferences.getInstance();
   runApp(MyApp(sharedPreferences: prefs));
 }
@@ -37,9 +39,29 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void initState() {
-    FirebaseMessagingHelper.instance.onMessage.listen((event) {
-      print("[FirebaseMessagingHelper] :title ${event.notification?.title} ");
-      print("[FirebaseMessagingHelper] :title ${event.notification?.body} ");
+    // FirebaseMessagingHelper
+    FirebaseMessagingHelper.instance.onMessage.listen(
+      LocalPushNotificationHelper.instance.notify,
+    );
+    FirebaseMessagingHelper.instance.onMessageOpenedApp.listen((event) {
+      LocalPushNotificationHelper.instance
+          .handleSelectNotificationMap(event.data);
+    });
+    FirebaseMessagingHelper.instance.getInitialMessage.then((value) {
+      if (value != null) {
+        LocalPushNotificationHelper.instance
+            .handleSelectNotificationMap(value.data);
+      }
+    });
+    // LocalPushNotificationHelper
+    LocalPushNotificationHelper.instance.selectNotificationSubject.listen(
+      LocalPushNotificationHelper.instance.handleSelectNotificationPayload,
+    );
+    LocalPushNotificationHelper.instance.details.then((value) {
+      if (value != null) {
+        LocalPushNotificationHelper.instance
+            .handleSelectNotificationPayload(value.payload);
+      }
     });
     super.initState();
   }
