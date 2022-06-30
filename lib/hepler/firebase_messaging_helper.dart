@@ -51,8 +51,8 @@ class FirebaseMessagingHelper {
     }
     return true;
   }
+}
 
-  Future _handleBackgroundMessage(RemoteMessage remoteMessage) async {
-    // handle background
-  }
+Future _handleBackgroundMessage(RemoteMessage remoteMessage) async {
+  // handle background
 }
